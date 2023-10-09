@@ -282,6 +282,7 @@ else
 fi
 
 settings_json="$HOME/.var/app/com.visualstudio.code/config/Code/User/settings.json"
+mkdir -p "${settings_json%/*}" && touch "$settings_json"
 
 ### VsCode flatpack doesn't provide access to wayland socket. Override this
 if [ "$XDG_SESSION_TYPE" = "wayland" ] ; then
@@ -289,7 +290,7 @@ if [ "$XDG_SESSION_TYPE" = "wayland" ] ; then
         verbose "Flatpak not allowed to read wayland socket. Fixing..."
         $flatpak override -u --socket=wayland com.visualstudio.code
     fi
-    if ! grep -q '"window\.titleBarStyle: *"custom"' "$settings_json" ; then
+    if grep -q '"window\.titleBarStyle": *"custom"' "$settings_json" ; then
         verbose "Set ozone platform hint to 'auto'"
         new_args+=("--ozone-platform-hint=auto")
     else
