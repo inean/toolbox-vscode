@@ -30,5 +30,10 @@ if [ "$1" == "exec" ] ; then
     '
     exec flatpak-spawn --host sh -c "$script" - "$@"
 else
-    exec flatpak-spawn --host podman "$@"
+    # Check if running from host
+    if [ -f /run/.containerenv ] ; then
+        exec flatpak-spawn --host podman "$@"
+    else
+        podman "$@"
+    fi
 fi
