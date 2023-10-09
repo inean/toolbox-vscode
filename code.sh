@@ -281,9 +281,25 @@ else
     esac
 fi
 
+settings_json="$HOME/.var/app/com.visualstudio.code/config/Code/User/settings.json"
+
+### VsCode flatpack doesn't provide access to wayland socket. Override this
+if [ "$XDG_SESSION_TYPE" = "wayland" ] ; then
+    if ! $flatpak info -M com.visualstudio.code | grep -q wayland; then
+        verbose "Flatpak not allowed to read wayland socket. Fixing..."
+        $flatpak override -u --socket=wayland com.visualstudio.code
+    fi
+    if ! grep -q '"window\.titleBarStyle: *"custom"' "$settings_json" ; then
+        verbose "Set ozone platform hint to 'auto'"
+        new_args+=("--ozone-platform-hint=auto")
+    else
+        info "Set window.titleBarStyle to 'custom' to make vscode use wayland"
+    fi
+fi
+
 if [ "$container_name" = "" ] ; then
    verbose "Not in a toolbox, running Visual Studio Code directly"
-   exec $flatpak run com.visualstudio.code "$@"
+   exec $flatpak run com.visualstudio.code "${new_args[@]}"
 fi
 
 ### Make sure that we have a podman wrapper configured
@@ -294,8 +310,6 @@ if [ "$(readlink "$podman_wrapper")" != "$podman_host_sh" ] ; then
     ln -sf "$podman_host_sh" "$podman_wrapper"
 fi
 
-
-settings_json="$HOME/.var/app/com.visualstudio.code/config/Code/User/settings.json"
 
 # Here's where we edit a JSON file with grep and sed...
 
