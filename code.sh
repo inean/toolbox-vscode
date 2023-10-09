@@ -112,9 +112,12 @@ add_file_or_folder_arg() {
     # https://github.com/microsoft/vscode/blob/main/src/vs/platform/windows/electron-main/windowsMainService.ts
     # vscode accepts URIs with non-ascii in them, so we only need to escape a few things (%#?)
 
-    escaped=$(sed 's/%/@TVSC_PERCENT@/g; s/#/%23/g; s/\?/%3F/g; s/@TVSC_PERCENT@/%25/g' <<<"$1")
-    # Don't have the container name yet, will substitute that in later
-    uri=vscode-remote://@TVSC_AUTHORITY@$escaped
+    uri=$1
+    if [ -f /run/.containerenv ] ; then
+        escaped=$(sed 's/%/@TVSC_PERCENT@/g; s/#/%23/g; s/\?/%3F/g; s/@TVSC_PERCENT@/%25/g' <<<"$1")
+        # Don't have the container name yet, will substitute that in later
+        uri=vscode-remote://@TVSC_AUTHORITY@$escaped
+    fi
 
     if [ -d "$1" ] ; then
         new_args+=(--folder-uri "$uri")
