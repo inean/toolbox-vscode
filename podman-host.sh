@@ -30,10 +30,14 @@ if [ "$1" == "exec" ] ; then
     '
     exec flatpak-spawn --host sh -c "$script" - "$@"
 else
-    # Check if running from host
-    if [ -f /run/.containerenv ] ; then
-        exec flatpak-spawn --host podman "$@"
-    else
-        podman "$@"
+    # Check if running from toolbox. We can guarantee that
+    # check for .containerenv or .toolboxenv will work so..
+    if command -v podman > /dev/null; then
+        if [ -f /run/toolboxenv ]; then
+            exec flatpak-spawn --host podman "$@"
+        else
+	    exec podman "$@"
+        fi
     fi
+    exec flatpak-spawn --host podman "$@"
 fi
